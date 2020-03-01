@@ -103,28 +103,33 @@ module MakeStack (Element: SERIALIZE) : (STACK with type element = Element.t) =
     let empty : stack = []
 
     let push (el : element) (s : stack) : stack =
-      failwith "push not implemented"
+      el :: s
 
     let pop_helper (s : stack) : (element * stack) =
-      failwith "pop_helper not implemented"
+      match s with
+      | [] -> raise Empty
+      | hd :: tl -> hd, tl
 
     let top (s : stack) : element =
-      failwith "top not implemented"
+      fst (pop_helper s)
 
     let pop (s : stack) : stack =
-      failwith "pop not implemented"
+      snd (pop_helper s)
 
     let map (f : element -> element) (s : stack) : stack =
-      failwith "map not implemented"
+      List.map f s
 
     let filter (f : element -> bool) (s : stack) : stack =
-      failwith "filter not implemented"
-
+      List.filter f s
     let fold_left (f : 'a -> element -> 'a) (init : 'a) (s : stack) : 'a =
-      failwith "fold_left not implemented"
+      List.fold_left f init s
 
     let serialize (s : stack) : string =
-      failwith "serialize not implemented"
+      fold_left (fun x y ->
+                  Element.serialize y ^ (if x <> "" then ":" ^ x else "")
+                ) 
+                "" 
+                s
   end ;;
 
 (*......................................................................
@@ -132,7 +137,12 @@ Exercise 1B: Now, make a module `IntStack` by applying the functor
 that you just defined to an appropriate module for serializing integers.
 ......................................................................*)
 
-module IntStack = struct end ;;
+module IntStack = MakeStack (
+  struct
+    type t = int
+    let serialize = Int.to_string
+  end
+) ;;
 
 (*......................................................................
 Exercise 1C: Make a module `IntStringStack` that creates a stack whose
@@ -150,6 +160,12 @@ For this oversimplified serialization function, you may assume that
 the string will be made up of alphanumeric characters only.
 ......................................................................*)
 
-module IntStringStack = struct end ;;
+module IntStringStack = MakeStack (
+  struct
+    type t = int * string
+    let serialize (i, s) =
+      "(" ^ (Int.to_string i) ^ s ^ ")"
+  end
+) ;;
 
 
